@@ -34,6 +34,15 @@
     }
   }
 
+  function getSearches() {
+    let searches = [];
+    let urls = id('searchbar').querySelectorAll('input');
+    for (let i = 0; i < urls.length; i++) {
+      searches.push(urls[i].value);
+    }
+    return searches;
+  }
+
   async function queryData() {
     try {
       let searches = getSearches();
@@ -47,8 +56,9 @@
         let parsed = parseHTML(results[i]);
         html.push(parsed);
       }
-      let comparison = compareResults(html);
-      console.log(comparison);
+      let comparison = compareResults(html[0], html[1]);
+      // console.log(comparison);
+      addResultsToPage(comparison);
     } catch (err) {
       console.error(err);
     }
@@ -68,14 +78,6 @@
     }
   }
 
-  function getSearches() {
-    let searches = [];
-    let urls = id('searchbar').querySelectorAll('input');
-    for (let i = 0; i < urls.length; i++) {
-      searches.push(urls[i].value);
-    }
-    return searches;
-  }
 
   function parseHTML(html) {
     const parser = new DOMParser();
@@ -90,29 +92,54 @@
     return products;
   }
 
-  function compareResults(resultsArray) {
+  // takes variable number of arrays with results
+  function compareResults(...resultsArray) {
+    // convert each result array to a set of item names
     const resultSets = resultsArray.map(results => new Set(results.map(item => item.name)));
+    console.log('result sets: ', resultSets);
+    // get a set of all item names across all result sets
     const allItems = new Set(resultsArray.flatMap(results => results.map(item => item.name)));
-    
+    console.log('all items: ', allItems);
+
+    // determine unique items for each result set
     const uniqueItems = resultsArray.map((results, index) => {
       const otherSets = resultSets.filter((_, i) => i !== index);
-      return results.filter(item => otherSets.every(set => !set.has(item.name)));
+      return results.filter(item => {
+        const isUnique = otherSets.every(set => !set.has(item.name));
+        return isUnique;
+      });
     });
   
-    const commonItems = [...allItems].filter(item =>
-      resultSets.every(set => set.has(item))
-    );
+    // Determine common items across all result sets
+    const commonItems = resultsArray[0].filter(item => {
+      const isInAllSets = resultSets.every(set => set.has(item.name));
+      return isInAllSets;
+    });
   
     return { uniqueItems, commonItems };
+  }
 
-    // const resultSet1 = new Set(results1.map(item => item.name));
-    // const resultSet2 = new Set(results2.map(item => item.name));
-
-    // const onlyInFirst = results1.filter(item => !resultSet2.has(item.name));
-    // const onlyInSecond = results2.filter(item => !resultSet1.has(item.name));
-    // const inBoth = results1.filter(item => resultSet2.has(item.name));
-
-    // return { onlyInFirst, onlyInSecond, inBoth };
+  function addResultsToPage(results) {
+    let items = id('items');
+    let common = gen('h3');
+    common.textContent = 'Common Items';
+    let unique = gen('h3');
+    unique.textContent = 'Unique Items';
+    items.append(common);
+    for (let i = 0; i < results.commonItems.length; i ++) {
+      let p = gen('p');
+      p.textContent = results.commonItems[i].name;
+      items.append(p);
+    }
+    items.append(unique);
+    for (let i = 0; i < results.uniqueItems.length; i ++) {
+      for (let k = 0; k < results.uniqueItems[i].length; k++) {
+        let p = gen('p');
+        p.textContent = results.uniqueItems[i][k].name;
+        items.append(p);
+      }
+    }
+    // for now, add all items to page under two lists
   }
 
   // statuscheck for fetch
