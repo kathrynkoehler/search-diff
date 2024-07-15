@@ -12,23 +12,6 @@
       id('run-diff-btn').addEventListener('click', async () => {
         await queryData();
       });
-      console.log('done');
-      // let searches = [];
-
-      // const query1 = 'sock';
-      // const query2 = 'socks';
-  
-      // const html1 = await fetchSearchResults(query1);
-      // const html2 = await fetchSearchResults(query2);
-      // // console.log('fetched ', html1);
-  
-      // const results1 = parseHTML(html1);
-      // const results2 = parseHTML(html2);
-      // // console.log('parsed');
-  
-      // const comparison = compareResults(results1, results2);
-      // console.log(comparison);
-
     } catch (err) {
       console.error(err);
     }
@@ -79,40 +62,52 @@
   }
 
 
+  /**
+   * Parses the html from the fetched page from a string format into DOM elements.
+   * @param {String} html - the html string from the page to parse
+   * @returns {Array} array of objects pulled from the html, representing the
+   *          products on the page.
+   */
   function parseHTML(html) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const products = [];
     doc.querySelectorAll('.product-tile').forEach(tile => {
-      const card = tile.querySelector('a.product-tile__image-link');
-      const name = card.dataset.productid;
-      const url = card.href;
-      products.push({ name, url });
+      const name = tile.querySelector('div.product-tile__product-attributes > div.product-tile__product-attributes__title-and-price > h3 > a').textContent;
+      const photo = tile.querySelector('a.product-tile__image-link');
+      const prodId = photo.dataset.productid;
+      const url = photo.href;
+      // console.log(tile.querySelector('source').srcset);
+      let img = tile.querySelector('source').srcset;
+      img = img.split(', ');
+      img = img[0].split('?$'[0]);
+      // console.log(img[0]);
+      products.push({ prodId, name, img, url });
     });
     return products;
   }
 
   // takes variable number of arrays with results
   function compareResults(...resultsArray) {
-    // convert each result array to a set of item names
-    const resultSets = resultsArray.map(results => new Set(results.map(item => item.name)));
+    // convert each result array to a set of item ids
+    const resultSets = resultsArray.map(results => new Set(results.map(item => item.prodId)));
     console.log('result sets: ', resultSets);
-    // get a set of all item names across all result sets
-    const allItems = new Set(resultsArray.flatMap(results => results.map(item => item.name)));
+    // get a set of all item ids across all result sets
+    const allItems = new Set(resultsArray.flatMap(results => results.map(item => item.prodId)));
     console.log('all items: ', allItems);
 
     // determine unique items for each result set
     const uniqueItems = resultsArray.map((results, index) => {
       const otherSets = resultSets.filter((_, i) => i !== index);
       return results.filter(item => {
-        const isUnique = otherSets.every(set => !set.has(item.name));
+        const isUnique = otherSets.every(set => !set.has(item.prodId));
         return isUnique;
       });
     });
   
     // Determine common items across all result sets
     const commonItems = resultsArray[0].filter(item => {
-      const isInAllSets = resultSets.every(set => set.has(item.name));
+      const isInAllSets = resultSets.every(set => set.has(item.prodId));
       return isInAllSets;
     });
   
@@ -142,6 +137,20 @@
     // for now, add all items to page under two lists
   }
 
+  /**
+   * Build a card element to display unique items from a page.
+   * @param {*} item 
+   * @returns 
+   */
+  function buildItem(item) {
+    let card = gen('article');
+    let name = gen('h2', {textContent: item.name});
+    let id = gen('p', {textContent: item.prodId});
+    let img = gen ('img', {src: item.img, alt: item.name});
+    card.append(img, name, id);
+    return card;
+  }
+
   // statuscheck for fetch
   async function statusCheck(response) {
     if (!response.ok) {
@@ -162,8 +171,16 @@
     return document.querySelectorAll(query);
   }
 
-  function gen(tag) {
-    return document.createElement(tag);
+  function gen(tag, attributes = {}) {
+    const element = document.createElement(tag);
+    for (const [key, value] of Object.entries(attributes)) {
+      if (key === 'classList') {
+        element.classList.add(...value);
+      } else {
+        element[key] = value;
+      }
+    }
+    return element;
   }
 
 })();
