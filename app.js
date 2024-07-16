@@ -31,7 +31,7 @@ app.post('/search/', async (req, res) => {
     await autoScroll(page);
     // let viewmoreBtn = await page.locator('#product-list > div.OneLinkTx.pagination_pagination__EiTAQ > button').click();
 
-    await page.waitForSelector('#product-list > div.product-list_productList__S1b7b > div > div:nth-child(1)');
+    await page.waitForSelector('#product-list div.product-tile');
     console.log('goto'); 
     let data = await page.evaluate(async () => {
       let element = document.querySelector('#product-list');
@@ -52,7 +52,7 @@ async function autoScroll(page) {
   await page.evaluate(async () => {
     await new Promise((resolve, reject) => {
       let totalHeight = 0;
-      const distance = 300;
+      const distance = 200;
       const timer = setInterval(() => {
         const scrollHeight = document.body.scrollHeight;
         window.scrollBy(0, distance);

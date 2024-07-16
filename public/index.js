@@ -12,27 +12,35 @@
       id('run-diff-btn').addEventListener('click', async () => {
         await queryData();
       });
+      id('add-url-btn').addEventListener('click', addURL);
     } catch (err) {
       console.error(err);
     }
   }
 
-  function getSearches() {
-    let searches = [];
-    let urls = id('searchbar').querySelectorAll('input');
-    for (let i = 0; i < urls.length; i++) {
-      searches.push(urls[i].value);
+  /**
+   * Add new URL input box to page for additional comparison.
+   */
+  function addURL() {
+    let section = id('urls');
+    let length = section.querySelectorAll('input').length;
+    if (length < 6) {
+      let div = gen('div');
+      let input = gen('input', {placeholder:"paste URL here", name:`page-${length+1}`});
+      div.append(input);
+      section.append(div);
     }
-    return searches;
+    // TODO: else give user a warning that it's too many to compare
   }
 
   async function queryData() {
     try {
       let searches = getSearches();
+      getPageTitles(searches);
       let results = [];
       let html = [];
       for (let i = 0; i < searches.length; i++) {
-        let result = await fetchSearchResults(searches[i]);
+        let result = await fetchSearchResults(searches[i], i);
         results.push(result);
       }
       for (let i = 0; i < results.length; i++) {
@@ -45,6 +53,15 @@
     } catch (err) {
       console.error(err);
     }
+  }
+
+  function getSearches() {
+    let searches = [];
+    let urls = id('searchbar').querySelectorAll('input');
+    for (let i = 0; i < urls.length; i++) {
+      searches.push(urls[i].value);
+    }
+    return searches;
   }
 
   async function fetchSearchResults(query) {
@@ -68,7 +85,7 @@
    * @returns {Array} array of objects pulled from the html, representing the
    *          products on the page.
    */
-  function parseHTML(html) {
+  function parseHTML(html, page) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const products = [];
@@ -78,11 +95,13 @@
       const prodId = photo.dataset.productid;
       const url = photo.href;
       // console.log(tile.querySelector('source').srcset);
-      let img = tile.querySelector('source').srcset;
+      let img = tile.querySelector('.image-container .image span picture');
+      img = img.querySelector('source').srcset;
+      console.log(img);
       img = img.split(', ');
-      img = img[0].split('?$'[0]);
-      // console.log(img[0]);
-      products.push({ prodId, name, img, url });
+      img = img[0].split('?$')[0].split(' ')[0];
+      console.log(img[0]);
+      products.push({ page, prodId, name, img, url });
     });
     return products;
   }
@@ -115,26 +134,51 @@
   }
 
   function addResultsToPage(results) {
+    console.log(results);
     let items = id('items');
-    let common = gen('h3');
-    common.textContent = 'Common Items';
-    let unique = gen('h3');
-    unique.textContent = 'Unique Items';
-    items.append(common);
+    let common = gen('h2', {textContent: 'Common Items'});
+    let section = gen('section');
+    let commonCardHolder = gen('section');
     for (let i = 0; i < results.commonItems.length; i ++) {
-      let p = gen('p');
-      p.textContent = results.commonItems[i].name;
-      items.append(p);
+      commonCardHolder.append(buildItem(results.commonItems[i]));
     }
-    items.append(unique);
+    section.append(common, commonCardHolder);
+    items.append(section);
+    // items.append(unique);
     for (let i = 0; i < results.uniqueItems.length; i ++) {
+      let page = qs(`section.page-${i} section`);
       for (let k = 0; k < results.uniqueItems[i].length; k++) {
-        let p = gen('p');
-        p.textContent = results.uniqueItems[i][k].name;
-        items.append(p);
+        page.append(buildItem(results.uniqueItems[i][k]));
       }
     }
     // for now, add all items to page under two lists
+  }
+
+  function getPageTitles(urls) {
+    let prefix;
+    let terms;
+    let titles = [];
+    for (let i = 0; i < urls.length; i++) {
+      let section = gen('section', {classList: `page-${i}`});
+      id('items').append(section);
+      if (urls[i].includes('search')) {
+        prefix = 'Search: ';
+        terms = urls[i].split('search?Ntt=')[1];
+        terms = terms.split('%20').join(' ');
+        // return `${prefix} ${terms}`;
+      } else {
+        prefix = 'Browse: ';
+      }
+      let heading = gen('h3', {classList: `page-${i}`, textContent: `${prefix} ${terms}`});
+      let cardHolder = gen('section');
+      section.append(heading, cardHolder);
+      titles.push(gen('h4', {classList: `page-${i}`, textContent: `${prefix} ${terms}`}));
+    }
+    // add a title to each url input
+    let inputs = qsa(`#searchbar input`);
+    for (let i = 0; i < inputs.length; i++) {
+      inputs[i].insertAdjacentElement('afterend', titles[i]);
+    }
   }
 
   /**
@@ -143,13 +187,19 @@
    * @returns 
    */
   function buildItem(item) {
-    let card = gen('article');
+    let card = gen('article', {classList: 'card'});
     let name = gen('h2', {textContent: item.name});
     let id = gen('p', {textContent: item.prodId});
-    let img = gen ('img', {src: item.img, alt: item.name});
+    // let img = gen ('img', {src: item.img, alt: item.name});
+    let img = gen('div', {classList: 'photo'});
+    img.append(item.img);
     card.append(img, name, id);
     return card;
   }
+
+  /**
+   * ----------------- Helpers -----------------
+   */
 
   // statuscheck for fetch
   async function statusCheck(response) {
@@ -175,7 +225,7 @@
     const element = document.createElement(tag);
     for (const [key, value] of Object.entries(attributes)) {
       if (key === 'classList') {
-        element.classList.add(...value);
+        element.classList.add(value);
       } else {
         element[key] = value;
       }
