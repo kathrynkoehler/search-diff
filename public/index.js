@@ -35,6 +35,8 @@
 
   async function queryData() {
     try {
+      id('items').innerHTML = '';
+      qs('#searchbar svg').classList.remove('hidden');
       let searches = getSearches();
       getPageTitles(searches);
       let results = [];
@@ -50,6 +52,7 @@
       let comparison = compareResults(html[0], html[1]);
       // console.log(comparison);
       addResultsToPage(comparison);
+      qs('#searchbar svg').classList.add('hidden');
     } catch (err) {
       console.error(err);
     }
@@ -57,7 +60,7 @@
 
   function getSearches() {
     let searches = [];
-    let urls = id('searchbar').querySelectorAll('input');
+    let urls = id('searchbar').querySelectorAll('input:not(:placeholder-shown)');
     for (let i = 0; i < urls.length; i++) {
       searches.push(urls[i].value);
     }
@@ -96,11 +99,11 @@
       const url = photo.href;
       // console.log(tile.querySelector('source').srcset);
       let img = tile.querySelector('.image-container .image span img');
+      console.log(img.srcset);
+      img = img.srcset;
+      img = img.split(', ');
+      img = img[img.length-1].split('?$')[0].split(' ')[0];
       console.log(img);
-      // img = img.querySelector('source').srcset;
-      // img = img.split(', ');
-      // img = img[0].split('?$')[0].split(' ')[0];
-      // console.log(img[0]);
       products.push({ page, prodId, name, img, url });
     });
     return products;
@@ -137,6 +140,9 @@
     console.log(results);
     let items = id('items');
     let common = gen('h2', {textContent: 'Common Items'});
+    common.addEventListener('click', (e) => {
+      collapseCards(e);
+    });
     let section = gen('section');
     let commonCardHolder = gen('section');
     for (let i = 0; i < results.commonItems.length; i ++) {
@@ -144,14 +150,18 @@
     }
     section.append(common, commonCardHolder);
     items.append(section);
-    // items.append(unique);
-    for (let i = 0; i < results.uniqueItems.length; i ++) {
-      let page = qs(`section.page-${i} section`);
+
+    for (let i = 0; i < results.uniqueItems.length; i++) {
+      let page = qs(`#items > section.page-${i} section`);
       for (let k = 0; k < results.uniqueItems[i].length; k++) {
         page.append(buildItem(results.uniqueItems[i][k]));
       }
+      let heading = qs(`#items > section.page-${i} h3`);
+      heading.textContent = heading.textContent + ` (${results.uniqueItems[i].length} unique)`;
+      heading.addEventListener('click', (e) => {
+        collapseCards(e);
+      })
     }
-    // for now, add all items to page under two lists
   }
 
   function getPageTitles(urls) {
@@ -177,24 +187,37 @@
     // add a title to each url input
     let inputs = qsa(`#searchbar input`);
     for (let i = 0; i < inputs.length; i++) {
-      inputs[i].insertAdjacentElement('afterend', titles[i]);
+      if (inputs[i].value) {
+        inputs[i].insertAdjacentElement('afterend', titles[i]);
+      }
     }
   }
 
   /**
    * Build a card element to display unique items from a page.
-   * @param {*} item 
-   * @returns 
+   * @param {JSON} item - the item to build a card to display on the page for
+   * @returns {HTMLElement} the newly built card for the item
    */
   function buildItem(item) {
     let card = gen('article', {classList: 'card'});
     let name = gen('h2', {textContent: item.name});
     let id = gen('p', {textContent: item.prodId});
-    // let img = gen ('img', {src: item.img, alt: item.name});
-    let img = gen('div', {classList: 'photo'});
-    img.append(item.img);
-    card.append(img, name, id);
+    let img = gen('img', {src: item.img, alt: item.name});
+    let contentDiv = gen('div', {classList: 'cardContents'});
+    contentDiv.append(name, id);
+    let photoDiv = gen('div', {classList: 'photo'});
+    photoDiv.append(img);
+    card.append(photoDiv, contentDiv);
     return card;
+  }
+
+  /**
+   * Collapses the hards beneath a section
+   * @param {Event} e - click event on section heading
+   */
+  function collapseCards(e) {
+    let cards = e.currentTarget.nextSibling;
+    cards.classList.toggle('collapsed');
   }
 
   /**

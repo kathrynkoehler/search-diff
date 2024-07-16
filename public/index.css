@@ -50,8 +50,10 @@ button {
 #items {
   display: flex;
   flex-direction: column;
-  width: 60%;
-  margin: 5%;
+  justify-content: space-between;
+  row-gap: 2rem;;
+  width: 70%;
+  margin-left: 1rem;
 }
 
 #items section {
@@ -59,24 +61,35 @@ button {
   justify-content: space-between;
   flex-wrap: wrap;
   row-gap: 1em;
+  width: 100%;
+  /* height: 100%; */
+  margin-bottom: 1rem;
 }
 
 .card {
   display: flex;
   flex-direction: column;
-  width: 300px;
-  height: 400px;
+  justify-content: space-between;
+  width: 200px;
+  height: 300px;
   flex-wrap: wrap;
   border: 1px solid red;
+  padding: 2px;
+  margin: 0.5em;
 }
 
 .card .photo {
   width: 100%;
-  height: 250px;
+  height: 200px;
+  object-fit: fill;
+}
+
+.card .cardContents {
+  background: white;
 }
 
 .card img {
-  height: 100%;
+  width: 100%;
 }
 
 .card h2 {
@@ -89,4 +102,54 @@ button {
   font-size: 14pt;
   margin-top: 5px;
   margin-bottom: 5px;
+}
+
+/* handle collapsing cards under searches */
+
+.collapsed {
+  height: 320px;
+  overflow: hidden;
+}
+
+/* loading animation */
+
+#sidebar svg {
+  height: 100px;
+  width: 250px;
+  position: fixed;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+#load-circle {
+  width: 250px;
+  height: 100px;
+  flex-grow: 0;
+  z-index: 1;
+  animation: strokeSpin 1.4s ease-in-out infinite both;
+  stroke: #6b6f74;
+  fill: transparent;
+  stroke-dasharray: 150;
+  stroke-linecap: round;
+  stroke-width: 0.2rem;
+  transform-origin: 50% 50%;
+}
+
+@keyframes strokeSpin {
+  0%, 25% {
+    stroke-dashoffset: 140;
+    transform: rotate(0);
+  }
+  50%, 75% {
+    stroke-dashoffset: 75;
+    transform: rotate(45deg);
+  }
+  100% {
+    stroke-dashoffset: 140;
+    transform: rotate(360deg);
+  }
+}
+
+.hidden {
+  display: none;
 }
