@@ -1,4 +1,8 @@
 body {
+  background-color: #fafafa;
+}
+
+body * {
   font-family: Calibre, Helvetica Neue, Helvetica, Roboto, Arial, sans-serif;
   box-sizing: border-box;
   font-size: 16pt;
@@ -29,6 +33,10 @@ button {
 
 #searchbar {
   width: 30%;
+  height: 100%;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  background-color: white;
 }
 
 #searchbar div {
@@ -37,9 +45,11 @@ button {
 }
 
 #searchbar input {
-  width: 60%;
-  padding: 3px;
-  margin: 3px;
+  width: 100%;
+  padding: 0.25rem;
+  margin: 0.1rem;
+  height: 2rem;
+  font-size: 14pt;
 }
 
 #searchbar h4 {
@@ -47,35 +57,69 @@ button {
   margin-bottom: 5px;
 }
 
+/* --------------- items ---------------- */
+
 #items {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  row-gap: 2rem;;
+  row-gap: 2rem;
   width: 70%;
-  margin-left: 1rem;
+  margin-left: 2rem;
+  padding: 0.5rem;
 }
 
-#items section {
+#items > section {
   display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: flex-start;
+  /* flex-wrap: wrap; */
   row-gap: 1em;
   width: 100%;
-  /* height: 100%; */
-  margin-bottom: 1rem;
+  max-height: fit-content;
+  margin-bottom: 3rem;
+  /* background-color: aqua; */
+  /* transition: max-height linear 0.3s; */
+}
+
+#items > section > section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  /* background-color: azure; */
+  row-gap: 1rem;
+  max-height: 100%;
+  transition: max-height ease-in-out 0.3s;
+  overflow: hidden;
+}
+
+#items > section > section > p {
+  font-size: 14pt;
+  margin: 0;
+}
+
+#items h3 {
+  height: 2rem;
+  width: 100%;
+  margin: 0;
+  background-color: #c8102e;
+  color: white;
+  padding: 0.3rem;
+  border-radius: 0.25rem;
 }
 
 .card {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  width: 200px;
-  height: 300px;
+  width: 250px;
+  height: 400px;
   flex-wrap: wrap;
-  border: 1px solid red;
-  padding: 2px;
+  /* border: 1px solid red; */
   margin: 0.5em;
+  background-color: white;
 }
 
 .card .photo {
@@ -86,6 +130,7 @@ button {
 
 .card .cardContents {
   background: white;
+  padding: 0.2rem;
 }
 
 .card img {
@@ -106,8 +151,12 @@ button {
 
 /* handle collapsing cards under searches */
 
-.collapsed {
-  height: 320px;
+#items > section.collapsed {
+  max-height: 500px;
+}
+
+#items > section > section.collapsed {
+  max-height: 370px;
   overflow: hidden;
 }
 
@@ -147,6 +196,25 @@ button {
   100% {
     stroke-dashoffset: 140;
     transform: rotate(360deg);
+  }
+}
+
+#items > section > section.loading {
+  width: 100%;
+  height: 400px;
+  z-index: 1;
+  animation: shimmerTile 2s forwards infinite;
+  background-color: rgb(250, 250, 250);
+  background-image: linear-gradient(90deg, rgb(250,250,250) 0px, rgb(229,230,231) 20%, rgb(250,250,250) 40%, rgb(250, 250, 250));
+  background-repeat: no-repeat;
+}
+
+@keyframes shimmerTile {
+  0% {
+    background-position: -1150px 0;
+  }
+  100% {
+    background-position: 1150px 0;
   }
 }
 

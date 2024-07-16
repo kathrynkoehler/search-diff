@@ -36,7 +36,7 @@
   async function queryData() {
     try {
       id('items').innerHTML = '';
-      qs('#searchbar svg').classList.remove('hidden');
+      // qs('#searchbar svg').classList.remove('hidden');
       let searches = getSearches();
       getPageTitles(searches);
       let results = [];
@@ -52,7 +52,9 @@
       let comparison = compareResults(html[0], html[1]);
       // console.log(comparison);
       addResultsToPage(comparison);
-      qs('#searchbar svg').classList.add('hidden');
+      let loading = qsa('.loading');
+      loading.forEach(section => {section.classList.remove('loading')});
+      // qs('#searchbar svg').classList.add('hidden');
     } catch (err) {
       console.error(err);
     }
@@ -97,13 +99,11 @@
       const photo = tile.querySelector('a.product-tile__image-link');
       const prodId = photo.dataset.productid;
       const url = photo.href;
-      // console.log(tile.querySelector('source').srcset);
+
       let img = tile.querySelector('.image-container .image span img');
-      console.log(img.srcset);
       img = img.srcset;
       img = img.split(', ');
       img = img[img.length-1].split('?$')[0].split(' ')[0];
-      console.log(img);
       products.push({ page, prodId, name, img, url });
     });
     return products;
@@ -153,8 +153,13 @@
 
     for (let i = 0; i < results.uniqueItems.length; i++) {
       let page = qs(`#items > section.page-${i} section`);
-      for (let k = 0; k < results.uniqueItems[i].length; k++) {
-        page.append(buildItem(results.uniqueItems[i][k]));
+      if (results.uniqueItems[i].length === 0) {
+        let p = gen('p', {textContent: 'All products present in first URL'})
+        page.append(p);
+      } else {
+        for (let k = 0; k < results.uniqueItems[i].length; k++) {
+          page.append(buildItem(results.uniqueItems[i][k]));
+        }
       }
       let heading = qs(`#items > section.page-${i} h3`);
       heading.textContent = heading.textContent + ` (${results.uniqueItems[i].length} unique)`;
@@ -175,12 +180,12 @@
         prefix = 'Search: ';
         terms = urls[i].split('search?Ntt=')[1];
         terms = terms.split('%20').join(' ');
-        // return `${prefix} ${terms}`;
       } else {
         prefix = 'Browse: ';
       }
       let heading = gen('h3', {classList: `page-${i}`, textContent: `${prefix} ${terms}`});
       let cardHolder = gen('section');
+      cardHolder.classList.add('cardHolder', 'loading');
       section.append(heading, cardHolder);
       titles.push(gen('h4', {classList: `page-${i}`, textContent: `${prefix} ${terms}`}));
     }
@@ -217,7 +222,9 @@
    */
   function collapseCards(e) {
     let cards = e.currentTarget.nextSibling;
+    let section = e.currentTarget.parent;
     cards.classList.toggle('collapsed');
+    section.classList.toggle('collapsed');
   }
 
   /**

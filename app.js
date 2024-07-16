@@ -16,7 +16,7 @@ app.post('/search/', async (req, res) => {
   try {
     let query = req.body.query;
     console.log(query);
-    let browser = await puppeteer.launch({headless: false});
+    let browser = await puppeteer.launch(); //{headless: false}
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(2 * 60 * 1000);
 
@@ -67,7 +67,7 @@ async function autoScroll(page) {
     });
     await new Promise((resolve, reject) => {
       let totalHeight = document.body.scrollHeight;
-      const distance = 100;
+      const distance = 800;
       const timer = setInterval(() => {
         // const scrollHeight = document.body.scrollHeight;
         window.scrollBy(0, -distance);
