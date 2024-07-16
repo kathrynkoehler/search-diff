@@ -27,11 +27,12 @@ app.post('/search/', async (req, res) => {
       'Accept-Language': 'en-US,en;q=0.9',
     });
 
+    // go to the page, and wait until it's done loading in content
     await page.goto(query, {waitUntil: 'networkidle2'});
     await autoScroll(page);
     // let viewmoreBtn = await page.locator('#product-list > div.OneLinkTx.pagination_pagination__EiTAQ > button').click();
 
-    await page.waitForSelector('#product-list div.product-tile');
+    await page.waitForSelector('#product-list div.product-tile .product-tile__image-link .image picture img');
     console.log('goto'); 
     let data = await page.evaluate(async () => {
       let element = document.querySelector('#product-list');
@@ -52,13 +53,27 @@ async function autoScroll(page) {
   await page.evaluate(async () => {
     await new Promise((resolve, reject) => {
       let totalHeight = 0;
-      const distance = 200;
+      const distance = 150;
       const timer = setInterval(() => {
         const scrollHeight = document.body.scrollHeight;
         window.scrollBy(0, distance);
         totalHeight += distance;
-
+    
         if (totalHeight >= scrollHeight) {
+          clearInterval(timer);
+          resolve();
+        }
+      }, 100);
+    });
+    await new Promise((resolve, reject) => {
+      let totalHeight = document.body.scrollHeight;
+      const distance = 150;
+      const timer = setInterval(() => {
+        // const scrollHeight = document.body.scrollHeight;
+        window.scrollBy(0, -distance);
+        totalHeight -= distance;
+    
+        if (totalHeight <= 0) {
           clearInterval(timer);
           resolve();
         }

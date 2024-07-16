@@ -95,12 +95,12 @@
       const prodId = photo.dataset.productid;
       const url = photo.href;
       // console.log(tile.querySelector('source').srcset);
-      let img = tile.querySelector('.image-container .image span picture');
-      img = img.querySelector('source').srcset;
+      let img = tile.querySelector('.image-container .image span img');
       console.log(img);
-      img = img.split(', ');
-      img = img[0].split('?$')[0].split(' ')[0];
-      console.log(img[0]);
+      // img = img.querySelector('source').srcset;
+      // img = img.split(', ');
+      // img = img[0].split('?$')[0].split(' ')[0];
+      // console.log(img[0]);
       products.push({ page, prodId, name, img, url });
     });
     return products;
