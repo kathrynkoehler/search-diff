@@ -36,6 +36,10 @@
   async function queryData() {
     try {
       id('items').innerHTML = '';
+      let headings = qsa('#searchbar h4');
+      for (let i = 0; i < headings.length; i++) {
+        headings[i].remove();
+      }
       // qs('#searchbar svg').classList.remove('hidden');
       let searches = getSearches();
       getPageTitles(searches);
