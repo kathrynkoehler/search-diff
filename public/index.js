@@ -84,7 +84,6 @@
     }
   }
 
-
   /**
    * Parses the html from the fetched page from a string format into DOM elements.
    * @param {String} html - the html string from the page to parse
@@ -102,9 +101,13 @@
       const url = photo.href;
 
       let img = tile.querySelector('.image-container .image span img');
-      img = img.srcset;
-      img = img.split(', ');
-      img = img[img.length-1].split('?$')[0].split(' ')[0];
+      console.log(name, img);
+      if (img) {
+        img = img.srcset;
+        img = img.split(', ');
+        img = img[img.length-1].split('?$')[0].split(' ')[0];
+        // products.push({ page, prodId, name, img, url });
+      }
       products.push({ page, prodId, name, img, url });
     });
     return products;
@@ -156,8 +159,13 @@
     });
     let section = gen('section');
     let commonCardHolder = gen('section');
-    for (let i = 0; i < results.commonItems.length; i ++) {
-      commonCardHolder.append(buildItem(results.commonItems[i]));
+    if (results.commonItems.length === 0) {
+      let p = gen('p', {textContent: 'No common items.'})
+      commonCardHolder.append(p);
+    } else {
+      for (let i = 0; i < results.commonItems.length; i ++) {
+        commonCardHolder.append(buildItem(results.commonItems[i]));
+      }
     }
     section.append(common, commonCardHolder);
     items.append(section);
