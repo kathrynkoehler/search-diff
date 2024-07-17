@@ -1,5 +1,6 @@
 body {
   background-color: #fafafa;
+  scroll-behavior: smooth;
 }
 
 body * {
@@ -80,7 +81,7 @@ button {
   max-height: fit-content;
   margin-bottom: 3rem;
   /* background-color: aqua; */
-  /* transition: max-height linear 0.3s; */
+  transition: max-height linear 0.3s;
 }
 
 #items > section > section {
@@ -106,7 +107,7 @@ button {
   margin: 0;
   background-color: #c8102e;
   color: white;
-  padding: 0.3rem;
+  padding: 0.4rem;
   border-radius: 0.25rem;
 }
 
@@ -152,7 +153,7 @@ button {
 /* handle collapsing cards under searches */
 
 #items > section.collapsed {
-  max-height: 500px;
+  max-height: 550px;
 }
 
 #items > section > section.collapsed {

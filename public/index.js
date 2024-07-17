@@ -42,15 +42,16 @@
       let results = [];
       let html = [];
       for (let i = 0; i < searches.length; i++) {
-        let result = await fetchSearchResults(searches[i], i);
+        let result = await fetchSearchResults(searches[i]);
         results.push(result);
       }
       for (let i = 0; i < results.length; i++) {
-        let parsed = parseHTML(results[i]);
+        let parsed = parseHTML(results[i], i);
         html.push(parsed);
       }
-      let comparison = compareResults(html[0], html[1]);
-      // console.log(comparison);
+      console.log(html);
+      let comparison = compareResults(html);
+      console.log(comparison);
       addResultsToPage(comparison);
       let loading = qsa('.loading');
       loading.forEach(section => {section.classList.remove('loading')});
@@ -110,26 +111,59 @@
   }
 
   // takes variable number of arrays with results
-  function compareResults(...resultsArray) {
+  function compareResults(resultsArray) {
     // convert each result array to a set of item ids
-    const resultSets = resultsArray.map(results => new Set(results.map(item => item.prodId)));
-    console.log('result sets: ', resultSets);
+    // const resultSets = resultsArray.map(results => new Set(results.map(item => item.prodId)));
+    // console.log('result sets: ', resultSets);
     // get a set of all item ids across all result sets
-    const allItems = new Set(resultsArray.flatMap(results => results.map(item => item.prodId)));
-    console.log('all items: ', allItems);
+    // const allItems = new Set(resultsArray.flatMap(results => results.map(item => item.prodId)));
+    // console.log('all items: ', allItems);
 
-    // determine unique items for each result set
-    const uniqueItems = resultsArray.map((results, index) => {
-      const otherSets = resultSets.filter((_, i) => i !== index);
-      return results.filter(item => {
-        const isUnique = otherSets.every(set => !set.has(item.prodId));
-        return isUnique;
+    // const firstSet = resultSets[0];
+
+    // determine unique items for the first result set
+  //   const uniqueItems = resultsArray[0].filter(item => {
+  //     // check if item is not in any of the other sets
+  //     const isUnique = resultsArray.slice(1).every(set => !set.has(item.prodId));
+  //     return isUnique;
+  // });
+  
+  //   // Determine common items across all result sets
+  //   const commonItems = resultsArray[0].filter(item => {
+  //     // check if item is in all other sets
+  //     const isInAllSets = resultsArray.slice(1).every(set => set.has(item.prodId));
+  //     return isInAllSets;
+  //   });
+
+    // Convert the first result array to a set of item ids
+    const firstSet = new Set(resultsArray[0].map(item => item.prodId));
+    console.log('first set: ', firstSet);
+
+    // Determine items in the first set that aren't in any of the subsequent sets
+    const uniqueToFirst = resultsArray[0].filter(item => {
+      return resultsArray.slice(1).every(results => {
+        const resultSet = new Set(results.map(item => item.prodId));
+        return !resultSet.has(item.prodId);
       });
     });
-  
-    // Determine common items across all result sets
+
+    // Determine unique items for each of the subsequent arrays
+    const uniqueItems = resultsArray.slice(1).map(results => {
+      return results.filter(item => {
+        return !firstSet.has(item.prodId);
+      });
+    });
+
+    // Insert the unique items of the first array at the start of the uniqueItems array
+    uniqueItems.unshift(uniqueToFirst);
+
+    // Determine common items in the first array and all other arrays
     const commonItems = resultsArray[0].filter(item => {
-      const isInAllSets = resultSets.every(set => set.has(item.prodId));
+      // Check if item is in all other sets
+      const isInAllSets = resultsArray.slice(1).every(results => {
+        const resultSet = new Set(results.map(item => item.prodId));
+        return resultSet.has(item.prodId);
+      });
       return isInAllSets;
     });
   
@@ -137,9 +171,8 @@
   }
 
   function addResultsToPage(results) {
-    console.log(results);
     let items = id('items');
-    let common = gen('h2', {textContent: 'Common Items'});
+    let common = gen('h3', {textContent: 'Common Items'});
     common.addEventListener('click', (e) => {
       collapseCards(e);
     });
@@ -154,7 +187,7 @@
     for (let i = 0; i < results.uniqueItems.length; i++) {
       let page = qs(`#items > section.page-${i} section`);
       if (results.uniqueItems[i].length === 0) {
-        let p = gen('p', {textContent: 'All products present in first URL'})
+        let p = gen('p', {textContent: 'All products present in first URL.'})
         page.append(p);
       } else {
         for (let k = 0; k < results.uniqueItems[i].length; k++) {
@@ -162,6 +195,7 @@
         }
       }
       let heading = qs(`#items > section.page-${i} h3`);
+      console.log(heading);
       heading.textContent = heading.textContent + ` (${results.uniqueItems[i].length} unique)`;
       heading.addEventListener('click', (e) => {
         collapseCards(e);
@@ -222,7 +256,7 @@
    */
   function collapseCards(e) {
     let cards = e.currentTarget.nextSibling;
-    let section = e.currentTarget.parent;
+    let section = e.currentTarget.parentElement;
     cards.classList.toggle('collapsed');
     section.classList.toggle('collapsed');
   }
