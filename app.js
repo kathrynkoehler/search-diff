@@ -32,7 +32,7 @@ app.post('/search/', async (req, res) => {
     await autoScroll(page);
     // let viewmoreBtn = await page.locator('#product-list > div.OneLinkTx.pagination_pagination__EiTAQ > button').click();
 
-    await page.waitForSelector('#product-list div.product-tile .product-tile__image-link .image picture img');
+    await page.waitForSelector('div.product-tile .product-tile__image-link .image picture img');
     console.log('goto'); 
     let data = await page.evaluate(async () => {
       let element = document.querySelector('#product-list');
@@ -67,7 +67,7 @@ async function autoScroll(page) {
     });
     await new Promise((resolve, reject) => {
       let totalHeight = document.body.scrollHeight;
-      const distance = 800;
+      const distance = 500;
       const timer = setInterval(() => {
         // const scrollHeight = document.body.scrollHeight;
         window.scrollBy(0, -distance);

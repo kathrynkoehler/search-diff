@@ -112,28 +112,6 @@
 
   // takes variable number of arrays with results
   function compareResults(resultsArray) {
-    // convert each result array to a set of item ids
-    // const resultSets = resultsArray.map(results => new Set(results.map(item => item.prodId)));
-    // console.log('result sets: ', resultSets);
-    // get a set of all item ids across all result sets
-    // const allItems = new Set(resultsArray.flatMap(results => results.map(item => item.prodId)));
-    // console.log('all items: ', allItems);
-
-    // const firstSet = resultSets[0];
-
-    // determine unique items for the first result set
-  //   const uniqueItems = resultsArray[0].filter(item => {
-  //     // check if item is not in any of the other sets
-  //     const isUnique = resultsArray.slice(1).every(set => !set.has(item.prodId));
-  //     return isUnique;
-  // });
-  
-  //   // Determine common items across all result sets
-  //   const commonItems = resultsArray[0].filter(item => {
-  //     // check if item is in all other sets
-  //     const isInAllSets = resultsArray.slice(1).every(set => set.has(item.prodId));
-  //     return isInAllSets;
-  //   });
 
     // Convert the first result array to a set of item ids
     const firstSet = new Set(resultsArray[0].map(item => item.prodId));
@@ -216,6 +194,7 @@
         terms = terms.split('%20').join(' ');
       } else {
         prefix = 'Browse: ';
+        terms = urls[i].split('c/')[1].split('/')[0];
       }
       let heading = gen('h3', {classList: `page-${i}`, textContent: `${prefix} ${terms}`});
       let cardHolder = gen('section');

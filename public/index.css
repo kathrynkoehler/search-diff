@@ -107,7 +107,7 @@ button {
   margin: 0;
   background-color: #c8102e;
   color: white;
-  padding: 0.4rem;
+  padding: 0.5rem;
   border-radius: 0.25rem;
 }
 
@@ -157,7 +157,7 @@ button {
 }
 
 #items > section > section.collapsed {
-  max-height: 370px;
+  max-height: 420px;
   overflow: hidden;
 }
 
