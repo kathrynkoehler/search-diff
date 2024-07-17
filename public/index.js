@@ -7,14 +7,106 @@
 
   window.addEventListener('load', init);
 
+  // holds current jwt
+  let jwt;
+
+  // api constants
+  const API_URL = 'https://lululemon-dev.c.lucidworks.cloud';
+  const APPID = 'LLM_us';
+
+  // holds extracted product information from cleaned json files
+  let allProducts = {};
+
   async function init() {
     try {
+      // prep login to authenticate new jwt
+      let auth = qs('#auth form');
+      auth.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await authenticateJWT(e);
+        auth['username'].value = '';
+        auth['password'].value = '';
+      });
+      let signin = id('signin');
+      signin.addEventListener('click', () => {
+        auth.classList.toggle('hidden');
+      });
+      qs('#error img').addEventListener('click', () => {
+        id('error').classList.add('hidden');
+      });
       id('run-diff-btn').addEventListener('click', async () => {
         await queryData();
+        await loadPage();
       });
       id('add-url-btn').addEventListener('click', addURL);
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  /**
+   * Shows an informative error message to user when JWT authentication or
+   * API query fails.
+   * @param {String} message - en explanation of where the error occurred
+   * @param {String} err - the error returned by the server
+   */
+  function handleError(message, err) {
+    id('items').innerHTML = '';
+    id('items').classList.add('hidden');
+    let display = qs('#error p');
+    display.textContent = message + err;
+    id('error').classList.remove('hidden');
+  }
+
+  /**
+   * when user submits their username and password, request to authenticate
+   * new JWT token is sent to server.
+   */
+  async function authenticateJWT() {
+    try {
+      let user = qs('#auth form')['username'].value;
+      let password = qs('#auth form')['password'].value;
+      await refreshJwt(API_URL, user, password);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  /**
+   * refreshes current jwt, obtaining new from fusion rest api and schedules
+   * method to run again before jwt expires
+   * @param {String} apiUrl - the url to query
+   * @param {String} user - the username to authenticate
+   * @param {String} password - the password to authenticate
+   */
+  async function refreshJwt(apiUrl, user, password) {
+    const loginUrl = `${apiUrl}/oauth2/token`;
+    const auth = btoa(`${user}:${password}`);
+    const authHeader = `Basic ${auth}`;
+
+    // execute fetch to get jwt
+    try {
+      const response = await fetch(loginUrl, {
+        method: 'POST',
+        headers: { 'Authorization': authHeader }
+      });
+      await statusCheck(response);
+      const responseJSON = await response.json();
+      jwt = responseJSON['access_token'];
+      const secondsUntilExpiration = parseInt(responseJSON['expires_in']);
+
+      qs('#auth form').classList.toggle('hidden');
+      qs('#error').classList.add('hidden');
+
+      // reschedule before jwt expires
+      const graceSeconds = secondsUntilExpiration > 15 ? 10 : 2;
+      const secondsUntilRefresh = secondsUntilExpiration - graceSeconds;
+      setTimeout(async () => {
+        await refreshJwt(apiUrl, user, password);
+      }, secondsUntilRefresh * 1000);
+    } catch (err) {
+      console.error('Attempt to retrieve JWT token failed due to exception. Exiting...', err);
+      handleError('Error authenticating JWT: ', err);
     }
   }
 
@@ -33,10 +125,115 @@
     // TODO: else give user a warning that it's too many to compare
   }
 
-  async function queryData() {
+  /**
+   * retrieves cleaned product data to build interface and handle interactivity. 
+   * @param {Event} e - the event triggering load (submit user/password)
+   */
+  async function loadPage(e) {
     try {
+      // loading animations
+      let items = id('items');
+      items.innerHTML = '';
+
+      let circle = qs('#options svg');
+      let circle2 = id('load-circle');
+      circle.classList.remove('hidden');
+      circle2.classList.remove('hidden');
+
+      // query data from api, then display on page
+      await queryData(e);
+      await displayData();
+      
+      // when all data is displayed, remove loading icons
+      circle.classList.add('hidden');
+      circle2.classList.add('hidden');
+      qs('#items .load-items').remove();
+    } catch (err) {
+      console.error('Error in loadPage:', err);
+    }
+  }
+
+  /**
+   * queries data directly from api.
+   * @param {Event} e - the event triggering the query (user/password submit)
+   */
+  async function queryData(e) {
+    e.preventDefault();
+    try {
+      // authenticate current jwt by adding it in auth header
       id('items').innerHTML = '';
-      // qs('#searchbar svg').classList.remove('hidden');
+      const headers = {
+        'Authorization': `Bearer ${jwt}`
+      };
+
+      let searches = getSearches();
+      getPageTitles(searches);
+      let results = [];
+      let products = [];
+      for (let i = 0; i < searches.length; i++) {
+        const queryURL = `/api/apps/${APPID}/query/${APPID}?browse=${searches[i]}&debug=results&debug.explain.structured=true`;
+        let res = await fetch(API_URL + queryURL, { headers });
+        await statusCheck(res);
+        res = await res.text();
+        id('error').classList.add('hidden');
+        results.push(res);
+      }
+      for (let i = 0; i < results.length; i++) {
+        allProducts[i] = {};
+        setData(results[i], i);
+        // products.push(parsed);
+      }
+      console.log(allProducts);
+
+      let comparison = compareResults(allProducts);
+      console.log(comparison);
+      addResultsToPage(comparison);
+      let loading = qsa('.loading');
+      loading.forEach(section => {section.classList.remove('loading')});
+
+    } catch (err) {
+      console.error('Error in queryData: ' + err);
+      handleError('Error querying API: ', err);
+      qs('#signin').classList.add('active');
+      setTimeout(() => {
+        qs('#signin').classList.remove('active');
+      }, 5000);
+    }
+  }
+
+  /*
+    ************** decompose response from api **************
+  */
+
+  function setData(data, page) {
+    let docs = data["response"]["docs"];
+    
+    // for each product, find details list
+    let item;
+    for (item of docs) {
+      // if (item['sku_available'] === "true") {  }
+      allProducts[page][item['product_id']] = {
+        'prodId': item['product_id'],
+        'displayName': item["product_displayName"],
+        'img': item["sku_skuImages"][0],
+        'url': item['product_pdpURL'],
+        'skuId': item['sku_id']
+      };
+    }
+  }
+
+  function getSearches() {
+    let searches = [];
+    let urls = id('searchbar').querySelectorAll('input:not(:placeholder-shown)');
+    for (let i = 0; i < urls.length; i++) {
+      searches.push(urls[i].value);
+    }
+    return searches;
+  }
+
+  async function OLDqueryData() {
+    try {
+      
       let searches = getSearches();
       getPageTitles(searches);
       let results = [];
@@ -61,14 +258,7 @@
     }
   }
 
-  function getSearches() {
-    let searches = [];
-    let urls = id('searchbar').querySelectorAll('input:not(:placeholder-shown)');
-    for (let i = 0; i < urls.length; i++) {
-      searches.push(urls[i].value);
-    }
-    return searches;
-  }
+  
 
   async function fetchSearchResults(query) {
     try {
@@ -115,6 +305,9 @@
 
   // takes variable number of arrays with results
   function compareResults(resultsArray) {
+
+    // Convert the JSON object values to an array of arrays of items
+    const resultsArray = Object.values(allProducts).map(set => Object.values(set));
 
     // Convert the first result array to a set of item ids
     const firstSet = new Set(resultsArray[0].map(item => item.prodId));
