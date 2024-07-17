@@ -30,6 +30,7 @@
       let signin = id('signin');
       signin.addEventListener('click', () => {
         auth.classList.toggle('hidden');
+        console.log(auth);
       });
       qs('#error img').addEventListener('click', () => {
         id('error').classList.add('hidden');
@@ -185,7 +186,7 @@
       }
       console.log(allProducts);
 
-      let comparison = compareResults(allProducts);
+      let comparison = compareResults();
       console.log(comparison);
       addResultsToPage(comparison);
       let loading = qsa('.loading');
@@ -252,7 +253,7 @@
       addResultsToPage(comparison);
       let loading = qsa('.loading');
       loading.forEach(section => {section.classList.remove('loading')});
-      // qs('#searchbar svg').classList.add('hidden');
+
     } catch (err) {
       console.error(err);
     }
@@ -304,7 +305,7 @@
   }
 
   // takes variable number of arrays with results
-  function compareResults(resultsArray) {
+  function compareResults() {
 
     // Convert the JSON object values to an array of arrays of items
     const resultsArray = Object.values(allProducts).map(set => Object.values(set));

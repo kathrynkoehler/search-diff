@@ -35,7 +35,7 @@ button {
 #searchbar {
   width: 30%;
   height: 100%;
-  padding: 0.5rem;
+  padding: 0.75rem;
   box-sizing: border-box;
   background-color: white;
 }
@@ -48,9 +48,10 @@ button {
 #searchbar input {
   width: 100%;
   padding: 0.25rem;
-  margin: 0.1rem;
   height: 2rem;
   font-size: 14pt;
+  border: 1.5px solid #000;
+  border-radius: 0.25rem;
 }
 
 #searchbar h4 {
@@ -163,7 +164,7 @@ button {
 
 /* loading animation */
 
-#sidebar svg {
+/* #sidebar svg {
   height: 100px;
   width: 250px;
   position: fixed;
@@ -198,7 +199,7 @@ button {
     stroke-dashoffset: 140;
     transform: rotate(360deg);
   }
-}
+} */
 
 #items > section > section.loading {
   width: 100%;
@@ -225,10 +226,12 @@ button {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  margin: 0.5rem 0 0.75rem;
 }
 
 #auth div {
   display: flex;
+  flex-direction: row;
   align-items: center;
   cursor: pointer;
 }
@@ -276,20 +279,24 @@ button {
 }
 
 #auth input {
-  font-size: 16px;
-  height: 1.5rem;
+  font-size: 14pt;
+  height: 1.75rem;
   border: 1.5px solid #000;
-  border-radius: .25rem;
+  border-radius: 0.25rem;
   padding: 0.3rem;
   color: #53565a;
-  margin: 0.25rem;
+  margin: 0;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 
 #auth button {
-  border: 1.5px solid #d3d5d7;
+  /* border: 1.5px solid #d3d5d7; */
   border-radius: .25rem;
   padding: 0.3rem;
-  margin: 0.25rem;
+  margin: 0;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 
 #auth button:active {
@@ -308,13 +315,14 @@ button {
   justify-content: center;
   align-items: center;
   background: #fff;
-  width: 100%;
+  width: 70%;
   margin: 1rem;
   padding: 5%;
 }
 
 #error p {
   width: 60%;
+  word-break: break-all;
 }
 
 #error img {
@@ -323,10 +331,15 @@ button {
   align-self: end;
 }
 
-#error.hidden {
+
+.hidden {
   display: none;
 }
 
-.hidden {
+#items.hidden {
+  display: none;
+}
+
+#error.hidden {
   display: none;
 }
