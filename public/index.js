@@ -53,9 +53,7 @@
         let parsed = parseHTML(results[i], i);
         html.push(parsed);
       }
-      console.log(html);
       let comparison = compareResults(html);
-      console.log(comparison);
       addResultsToPage(comparison);
       let loading = qsa('.loading');
       loading.forEach(section => {section.classList.remove('loading')});
@@ -65,6 +63,10 @@
     }
   }
 
+  /**
+   * Get the URLS the user entered to compare from the sidebar.
+   * @returns {Array} - array of user-entered URLs.
+   */
   function getSearches() {
     let searches = [];
     let urls = id('searchbar').querySelectorAll('input:not(:placeholder-shown)');
@@ -74,14 +76,24 @@
     return searches;
   }
 
+  /**
+   * Fetch the contents of the URL from the website. Add parameters for amount
+   * of records returned and formatting.
+   * @param {String} query - the URL to fetch contents of.
+   * @returns {JSON} the formatted contents of the URL
+   */
   async function fetchSearchResults(query) {
     try {
       console.log('fetch: ' + query);
       let search = new FormData();
-      search.append('query', query);
+      if (query.includes('search')) {
+        search.append('query', `${query}&No=0&Nrpp=1000&format=json`);
+      } else {
+        search.append('query', `${query}?No=0&Nrpp=1000&format=json`);
+      }
       let res = await fetch(`/search`, { method: "POST", body: search});
       await statusCheck(res);
-      res = await res.text();
+      res = await res.json();
       return res;
     } catch (err) {
       console.error('fetchSearchResults: ', err);
@@ -90,28 +102,26 @@
 
   /**
    * Parses the html from the fetched page from a string format into DOM elements.
-   * @param {String} html - the html string from the page to parse
+   * @param {String} data - the html string from the page to parse
    * @returns {Array} array of objects pulled from the html, representing the
    *          products on the page.
    */
-  function parseHTML(html, page) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+  function parseHTML(data, page) {
+    const doc = data['contents'][0]['mainContent'][0]['contents'][0]['records'];
     const products = [];
-    doc.querySelectorAll('.product-tile').forEach(tile => {
-      const name = tile.querySelector('div.product-tile__product-attributes > div.product-tile__product-attributes__title-and-price > h3 > a').textContent;
-      const photo = tile.querySelector('a.product-tile__image-link');
-      const prodId = photo.dataset.productid;
-      const url = photo.href;
-
-      let img = tile.querySelector('.image-container .image span img');
-      console.log(name, img);
-      if (img) {
-        img = img.srcset;
-        img = img.split(', ');
-        img = img[img.length-1].split('?$')[0].split(' ')[0];
-        // products.push({ page, prodId, name, img, url });
+    doc.forEach(record => {
+      let item = record['attributes'];
+      
+      const name = item['product.displayName'][0];
+      const img = item['product.sku.skuImages'][0];
+      let prodId = item['product.id'];
+      if (!prodId) {
+        prodId = item['product.repositoryId'][0];
+      } else {
+        prodId = item['product.id'][0];
       }
+      const url = item['product.pdpURL'][0];
+
       products.push({ page, prodId, name, img, url });
     });
     return products;
@@ -122,7 +132,6 @@
 
     // Convert the first result array to a set of item ids
     const firstSet = new Set(resultsArray[0].map(item => item.prodId));
-    console.log('first set: ', firstSet);
 
     // Determine items in the first set that aren't in any of the subsequent sets
     const uniqueToFirst = resultsArray[0].filter(item => {
@@ -155,13 +164,14 @@
     return { uniqueItems, commonItems };
   }
 
+  /**
+   * Add the items to page, separated by URL if unique, and under a Common heading
+   * otherwise.
+   * @param {Object} results - an array of common items, and arrays of unique
+   *        items for each URL.
+   */
   function addResultsToPage(results) {
     let items = id('items');
-    let common = gen('h3', {textContent: 'Common Items'});
-    common.addEventListener('click', (e) => {
-      collapseCards(e);
-    });
-    let section = gen('section');
     let commonCardHolder = gen('section');
     if (results.commonItems.length === 0) {
       let p = gen('p', {textContent: 'No common items.'})
@@ -171,6 +181,11 @@
         commonCardHolder.append(buildItem(results.commonItems[i]));
       }
     }
+    let common = gen('h3', {textContent: `Common Items (${results.commonItems.length})`});
+    common.addEventListener('click', (e) => {
+      collapseCards(e);
+    });
+    let section = gen('section');
     section.append(common, commonCardHolder);
     items.append(section);
 
@@ -185,7 +200,6 @@
         }
       }
       let heading = qs(`#items > section.page-${i} h3`);
-      console.log(heading);
       heading.textContent = heading.textContent + ` (${results.uniqueItems[i].length} unique)`;
       heading.addEventListener('click', (e) => {
         collapseCards(e);
@@ -193,6 +207,11 @@
     }
   }
 
+  /**
+   * Get the page title for each URL to make headings on the sidebar and item
+   * lists.
+   * @param {Array} urls - Array of URLs to extract page titles from.
+   */
   function getPageTitles(urls) {
     let prefix;
     let terms;
