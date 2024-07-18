@@ -7,31 +7,18 @@
 
   window.addEventListener('load', init);
 
-  // holds current jwt
-  let jwt;
+  // // holds current jwt
+  // let jwt;
 
-  // api constants
-  const API_URL = 'https://lululemon-dev.c.lucidworks.cloud';
-  const APPID = '/api/apps/LLM_us/query/LLM_us_browse?';
+  // // api constants
+  // const API_URL = 'https://lululemon-dev.c.lucidworks.cloud';
+  // const APPID = '/api/apps/LLM_us/query/LLM_us_browse?';
 
   // holds extracted product information from cleaned json files
   let allProducts = {};
 
   async function init() {
     try {
-      // prep login to authenticate new jwt
-      let auth = qs('#auth form');
-      auth.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        await authenticateJWT(e);
-        auth['username'].value = '';
-        auth['password'].value = '';
-      });
-      let signin = id('signin');
-      signin.addEventListener('click', () => {
-        auth.classList.toggle('hidden');
-        console.log(auth);
-      });
       qs('#error img').addEventListener('click', () => {
         id('error').classList.add('hidden');
       });
@@ -136,19 +123,19 @@
       let items = id('items');
       items.innerHTML = '';
 
-      let circle = qs('#options svg');
-      let circle2 = id('load-circle');
-      circle.classList.remove('hidden');
-      circle2.classList.remove('hidden');
+      // let circle = qs('#options svg');
+      // let circle2 = id('load-circle');
+      // circle.classList.remove('hidden');
+      // circle2.classList.remove('hidden');
 
       // query data from api, then display on page
       await queryData(e);
-      await displayData();
+      // await displayData();
       
       // when all data is displayed, remove loading icons
-      circle.classList.add('hidden');
-      circle2.classList.add('hidden');
-      qs('#items .load-items').remove();
+      // circle.classList.add('hidden');
+      // circle2.classList.add('hidden');
+      // qs('#items .load-items').remove();
     } catch (err) {
       console.error('Error in loadPage:', err);
     }
@@ -159,37 +146,37 @@
    * @param {Event} e - the event triggering the query (user/password submit)
    */
   async function queryData(e) {
-    e.preventDefault();
+    // e.preventDefault();
     try {
       // authenticate current jwt by adding it in auth header
       id('items').innerHTML = '';
-      const headers = {
-        'Authorization': `Bearer ${jwt}`
-      };
+      // const headers = {
+      //   'Authorization': `Bearer ${jwt}`
+      // };
 
       let searches = getSearches();
       getPageTitles(searches);
       let results = [];
       // let products = [];
       for (let i = 0; i < searches.length; i++) {
-        const queryURL = `${searches[i]}&debug=results&debug.explain.structured=true`;
-        let res = await fetch(API_URL + queryURL, { headers });
+        const queryURL = `${searches[i]}?format=json`;
+        let res = await fetch(queryURL);
         await statusCheck(res);
         res = await res.text();
         id('error').classList.add('hidden');
         results.push(res);
       }
       console.log(results);
-      for (let i = 0; i < results.length; i++) {
-        allProducts[i] = {};
-        setData(results[i], i);
-        // products.push(parsed);
-      }
-      console.log(allProducts);
+      // for (let i = 0; i < results.length; i++) {
+      //   allProducts[i] = {};
+      //   setData(results[i], i);
+      //   // products.push(parsed);
+      // }
+      // console.log(allProducts);
 
-      let comparison = compareResults();
-      console.log(comparison);
-      addResultsToPage(comparison);
+      // let comparison = compareResults();
+      // console.log(comparison);
+      // addResultsToPage(comparison);
       let loading = qsa('.loading');
       loading.forEach(section => {section.classList.remove('loading')});
 
@@ -201,6 +188,15 @@
         qs('#signin').classList.remove('active');
       }, 5000);
     }
+  }
+
+  function getSearches() {
+    let searches = [];
+    let urls = id('searchbar').querySelectorAll('input:not(:placeholder-shown)');
+    for (let i = 0; i < urls.length; i++) {
+      searches.push(urls[i].value);
+    }
+    return searches;
   }
 
   /*
@@ -224,14 +220,6 @@
     }
   }
 
-  function getSearches() {
-    let searches = [];
-    let urls = id('searchbar').querySelectorAll('input:not(:placeholder-shown)');
-    for (let i = 0; i < urls.length; i++) {
-      searches.push(urls[i].value);
-    }
-    return searches;
-  }
 
   async function OLDqueryData() {
     try {
@@ -385,6 +373,7 @@
   }
 
   function getPageTitles(urls) {
+    console.log(urls);
     let prefix;
     let terms;
     let titles = [];
