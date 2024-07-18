@@ -12,7 +12,7 @@
 
   // api constants
   const API_URL = 'https://lululemon-dev.c.lucidworks.cloud';
-  const APPID = 'LLM_us';
+  const APPID = '/api/apps/LLM_us/query/LLM_us_browse?';
 
   // holds extracted product information from cleaned json files
   let allProducts = {};
@@ -170,15 +170,16 @@
       let searches = getSearches();
       getPageTitles(searches);
       let results = [];
-      let products = [];
+      // let products = [];
       for (let i = 0; i < searches.length; i++) {
-        const queryURL = `/api/apps/${APPID}/query/${APPID}?browse=${searches[i]}&debug=results&debug.explain.structured=true`;
+        const queryURL = `${searches[i]}&debug=results&debug.explain.structured=true`;
         let res = await fetch(API_URL + queryURL, { headers });
         await statusCheck(res);
         res = await res.text();
         id('error').classList.add('hidden');
         results.push(res);
       }
+      console.log(results);
       for (let i = 0; i < results.length; i++) {
         allProducts[i] = {};
         setData(results[i], i);
