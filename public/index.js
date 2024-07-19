@@ -19,45 +19,57 @@
   }
 
   /**
-   * Add new URL input box to page for additional comparison.
+   * Add new URL input box to page for an additional page comparison.
    */
   function addURL() {
     let section = id('urls');
     let length = section.querySelectorAll('input').length;
+
+    // ensure user doesn't compare more than 6 URLs (arbitrary limit for time)
     if (length < 6) {
       let div = gen('div');
       let input = gen('input', {placeholder:"paste URL here", name:`page-${length+1}`});
       div.append(input);
       section.append(div);
+    } else {
+      let error = id('error');
+      error.classList.remove('hidden');
+      qs('#error p').textContent = 'Compare a maximum of six URLs.';
+      setTimeout(() => {
+        error.classList.add('hidden');
+      }, 5000);
     }
-    // TODO: else give user a warning that it's too many to compare
   }
 
+  /**
+   * Fetch the pages to compare, append their titles to interface, compare
+   * the products returned, and add those results to the interface.
+   */
   async function queryData() {
     try {
+      // clear prior contents
       id('items').innerHTML = '';
       let headings = qsa('#searchbar h4');
       for (let i = 0; i < headings.length; i++) {
         headings[i].remove();
       }
-      // qs('#searchbar svg').classList.remove('hidden');
+      // get the urls and add their titles to the sidebar / content section
       let searches = getSearches();
       getPageTitles(searches);
       let results = [];
-      let html = [];
       for (let i = 0; i < searches.length; i++) {
         let result = await fetchSearchResults(searches[i]);
         results.push(result);
       }
+      let response = [];
       for (let i = 0; i < results.length; i++) {
-        let parsed = parseHTML(results[i], i);
-        html.push(parsed);
+        let parsed = parseResponse(results[i], i);
+        response.push(parsed);
       }
-      let comparison = compareResults(html);
+      let comparison = compareResults(response);
       addResultsToPage(comparison);
       let loading = qsa('.loading');
       loading.forEach(section => {section.classList.remove('loading')});
-      // qs('#searchbar svg').classList.add('hidden');
     } catch (err) {
       console.error(err);
     }
@@ -101,12 +113,16 @@
   }
 
   /**
-   * Parses the html from the fetched page from a string format into DOM elements.
-   * @param {String} data - the html string from the page to parse
-   * @returns {Array} array of objects pulled from the html, representing the
+   * Parses the JSON response from the fetched page from a string format into
+   * usable structured data.
+   * @param {String} data - the response from the page to parse
+   * @param {Number} page - the URL the data are from. Used to correctly place
+   *          items on the page with corresponding page titles.
+   * @returns {Array} objects pulled from the data, representing the
    *          products on the page.
    */
-  function parseHTML(data, page) {
+  function parseResponse(data, page) {
+    // the object within the response that holds the list of items on the page
     const doc = data['contents'][0]['mainContent'][0]['contents'][0]['records'];
     const products = [];
     doc.forEach(record => {
@@ -114,26 +130,36 @@
       
       const name = item['product.displayName'][0];
       const img = item['product.sku.skuImages'][0];
+      const url = item['product.pdpURL'][0];
+
+      // account for the product.id object sometimes being absent
       let prodId = item['product.id'];
       if (!prodId) {
         prodId = item['product.repositoryId'][0];
       } else {
         prodId = item['product.id'][0];
       }
-      const url = item['product.pdpURL'][0];
 
       products.push({ page, prodId, name, img, url });
     });
     return products;
   }
 
-  // takes variable number of arrays with results
+  /**
+   * Compares the results from all pages between the first URL and each of the
+   * additional inputs. 
+   * @param {Array} resultsArray - array of parsed data returned from each URL
+   *          submitted. Index corresponds to order of input.
+   * @returns {Object} two arrays. uniqueItems is nested and tracks which items
+   *            are particular to a page, and commonItems holds all items that 
+   *            are common between the first page and at least one other.
+   */
   function compareResults(resultsArray) {
 
-    // Convert the first result array to a set of item ids
+    // convert the first result array to a set of item ids
     const firstSet = new Set(resultsArray[0].map(item => item.prodId));
 
-    // Determine items in the first set that aren't in any of the subsequent sets
+    // determine items in the first set that aren't in any of the subsequent sets
     const uniqueToFirst = resultsArray[0].filter(item => {
       return resultsArray.slice(1).every(results => {
         const resultSet = new Set(results.map(item => item.prodId));
@@ -141,24 +167,21 @@
       });
     });
 
-    // Determine unique items for each of the subsequent arrays
+    // determine unique items for each subsequent array compared to first
     const uniqueItems = resultsArray.slice(1).map(results => {
       return results.filter(item => {
         return !firstSet.has(item.prodId);
       });
     });
 
-    // Insert the unique items of the first array at the start of the uniqueItems array
+    // insert unique items of first array at the start of uniqueItems array
     uniqueItems.unshift(uniqueToFirst);
 
-    // Determine common items in the first array and all other arrays
-    const commonItems = resultsArray[0].filter(item => {
-      // Check if item is in all other sets
-      const isInAllSets = resultsArray.slice(1).every(results => {
-        const resultSet = new Set(results.map(item => item.prodId));
-        return resultSet.has(item.prodId);
+    // determine common items between the first set and each subsequent set
+    const isInAllSets = resultsArray.slice(1).map(results => {
+      return results.filter(item => {
+        return !firstSet.has(item.prodId);
       });
-      return isInAllSets;
     });
   
     return { uniqueItems, commonItems };
@@ -172,6 +195,8 @@
    */
   function addResultsToPage(results) {
     let items = id('items');
+
+    // build the section to hold common items
     let commonCardHolder = gen('section');
     if (results.commonItems.length === 0) {
       let p = gen('p', {textContent: 'No common items.'})
@@ -189,6 +214,7 @@
     section.append(common, commonCardHolder);
     items.append(section);
 
+    // append the unique items to the appropriate page headings
     for (let i = 0; i < results.uniqueItems.length; i++) {
       let page = qs(`#items > section.page-${i} section`);
       if (results.uniqueItems[i].length === 0) {
@@ -233,7 +259,7 @@
       section.append(heading, cardHolder);
       titles.push(gen('h4', {classList: `page-${i}`, textContent: `${prefix} ${terms}`}));
     }
-    // add a title to each url input
+    // add a title to each url input on the sidebar
     let inputs = qsa(`#searchbar input`);
     for (let i = 0; i < inputs.length; i++) {
       if (inputs[i].value) {
@@ -243,7 +269,8 @@
   }
 
   /**
-   * Build a card element to display unique items from a page.
+   * Build a card element to display unique items from a page, showing an image
+   * of the item, its name, and its product ID.
    * @param {JSON} item - the item to build a card to display on the page for
    * @returns {HTMLElement} the newly built card for the item
    */
@@ -261,7 +288,7 @@
   }
 
   /**
-   * Collapses the hards beneath a section
+   * Collapses the cards beneath a section.
    * @param {Event} e - click event on section heading
    */
   function collapseCards(e) {
