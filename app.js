@@ -29,8 +29,6 @@ app.post('/search/', async (req, res) => {
 
     // go to the page, and wait until it's done loading in content
     await page.goto(query, {waitUntil: 'networkidle2'});
-    // await autoScroll(page);
-    // let viewmoreBtn = await page.locator('#product-list > div.OneLinkTx.pagination_pagination__EiTAQ > button').click();
 
     console.log('goto');
     await page.waitForSelector('pre');
@@ -39,7 +37,6 @@ app.post('/search/', async (req, res) => {
       let element = document.querySelector('pre');
       return element ? element.innerHTML : null;
     });
-    // console.log(data);
     await browser.close();
     res.send(data);
 

@@ -66,7 +66,9 @@
         let parsed = parseResponse(results[i], i);
         response.push(parsed);
       }
+      console.log(response);
       let comparison = compareResults(response);
+      console.log(comparison);
       addResultsToPage(comparison);
       let loading = qsa('.loading');
       loading.forEach(section => {section.classList.remove('loading')});
@@ -162,15 +164,17 @@
     // determine items in the first set that aren't in any of the subsequent sets
     const uniqueToFirst = resultsArray[0].filter(item => {
       return resultsArray.slice(1).every(results => {
-        const resultSet = new Set(results.map(item => item.prodId));
-        return !resultSet.has(item.prodId);
+        return !results.some(resultItem => resultItem.prodId === item.prodId);
+        // const resultSet = new Set(results.map(item => item.prodId));
+        // return !resultSet.has(item.prodId);
       });
     });
 
     // determine unique items for each subsequent array compared to first
     const uniqueItems = resultsArray.slice(1).map(results => {
       return results.filter(item => {
-        return !firstSet.has(item.prodId);
+        return !resultsArray[0].some(firstItem => firstItem.prodId === item.prodId);
+        // return !firstSet.has(item.prodId);
       });
     });
 
@@ -178,10 +182,11 @@
     uniqueItems.unshift(uniqueToFirst);
 
     // determine common items between the first set and each subsequent set
-    const isInAllSets = resultsArray.slice(1).map(results => {
+    const commonItems = resultsArray.slice(1).map(results => {
       return results.filter(item => {
-        return !firstSet.has(item.prodId);
+        return resultsArray[0].some(firstItem => firstItem.prodId === item.prodId);
       });
+      // return results.filter(item => firstSet.has(item.prodId));
     });
   
     return { uniqueItems, commonItems };
@@ -198,15 +203,15 @@
 
     // build the section to hold common items
     let commonCardHolder = gen('section');
-    if (results.commonItems.length === 0) {
+    if (results.commonItems[0].length === 0) {
       let p = gen('p', {textContent: 'No common items.'})
       commonCardHolder.append(p);
     } else {
-      for (let i = 0; i < results.commonItems.length; i ++) {
-        commonCardHolder.append(buildItem(results.commonItems[i]));
+      for (let i = 0; i < results.commonItems[0].length; i ++) {
+        commonCardHolder.append(buildItem(results.commonItems[0][i]));
       }
     }
-    let common = gen('h3', {textContent: `Common Items (${results.commonItems.length})`});
+    let common = gen('h3', {textContent: `Common Items (${results.commonItems[0].length})`});
     common.addEventListener('click', (e) => {
       collapseCards(e);
     });
@@ -277,10 +282,12 @@
   function buildItem(item) {
     let card = gen('article', {classList: 'card'});
     let name = gen('h2', {textContent: item.name});
+    let idLink = gen('a', {href: item.url});
     let id = gen('p', {textContent: item.prodId});
+    idLink.append(id);
     let img = gen('img', {src: item.img, alt: item.name});
     let contentDiv = gen('div', {classList: 'cardContents'});
-    contentDiv.append(name, id);
+    contentDiv.append(name, idLink);
     let photoDiv = gen('div', {classList: 'photo'});
     photoDiv.append(img);
     card.append(photoDiv, contentDiv);
