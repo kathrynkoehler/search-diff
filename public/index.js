@@ -1,5 +1,5 @@
 /**
- * Compare the results of two or more searches.
+ * Compare the product results of two or more searches.
  */
 'use strict';
 
@@ -7,6 +7,9 @@
 
   window.addEventListener('load', init);
 
+  /**
+   * Initialize program on load. Prepare page interactivity.
+   */
   async function init() {
     try {
       id('run-diff-btn').addEventListener('click', async () => {
@@ -19,7 +22,7 @@
   }
 
   /**
-   * Add new URL input box to page for an additional page comparison.
+   * Add URL input box to page for an additional page comparison.
    */
   function addURL() {
     let section = id('urls');
