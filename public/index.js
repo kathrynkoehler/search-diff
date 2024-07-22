@@ -69,9 +69,9 @@
         let parsed = parseResponse(results[i], i);
         response.push(parsed);
       }
-      console.log(response);
+      // console.log(response);
       let comparison = compareResults(response);
-      console.log(comparison);
+      // console.log(comparison);
       addResultsToPage(comparison);
       let loading = qsa('.loading');
       loading.forEach(section => {section.classList.remove('loading')});
@@ -168,8 +168,6 @@
     const uniqueToFirst = resultsArray[0].filter(item => {
       return resultsArray.slice(1).every(results => {
         return !results.some(resultItem => resultItem.prodId === item.prodId);
-        // const resultSet = new Set(results.map(item => item.prodId));
-        // return !resultSet.has(item.prodId);
       });
     });
 
@@ -177,7 +175,6 @@
     const uniqueItems = resultsArray.slice(1).map(results => {
       return results.filter(item => {
         return !resultsArray[0].some(firstItem => firstItem.prodId === item.prodId);
-        // return !firstSet.has(item.prodId);
       });
     });
 
@@ -189,7 +186,6 @@
       return results.filter(item => {
         return resultsArray[0].some(firstItem => firstItem.prodId === item.prodId);
       });
-      // return results.filter(item => firstSet.has(item.prodId));
     });
   
     return { uniqueItems, commonItems };
@@ -288,9 +284,9 @@
     let idLink = gen('a', {href: item.url});
     let id = gen('p', {textContent: item.prodId});
     idLink.append(id);
-    let img = gen('img', {src: item.img, alt: item.name});
     let contentDiv = gen('div', {classList: 'cardContents'});
     contentDiv.append(name, idLink);
+    let img = gen('img', {src: item.img, alt: item.name});
     let photoDiv = gen('div', {classList: 'photo'});
     photoDiv.append(img);
     card.append(photoDiv, contentDiv);
@@ -312,7 +308,11 @@
    * ----------------- Helpers -----------------
    */
 
-  // statuscheck for fetch
+  /**
+   * Check whether a fetch result is in the ok status range.
+   * @param {Promise} response - the promise to check the ok range of
+   * @returns {Promise}
+   */
   async function statusCheck(response) {
     if (!response.ok) {
       throw new Error(await response.text());
@@ -320,18 +320,40 @@
     return response;
   }
 
+  /**
+   * Shorthand for getElementByID
+   * @param {String} idName - id to find (exluding '#')
+   * @returns {HTMLElement}
+   */
   function id(idName) {
     return document.getElementById(idName);
   }
 
+  /**
+   * Shorthand for querySelector
+   * @param {String} query - the selector to query for
+   * @returns {HTMLElement}
+   */
   function qs(query) {
     return document.querySelector(query);
   }
 
+  /**
+   * Shorthand for querySelector
+   * @param {String} query - the selector to query for
+   * @returns {HTMLElement}
+   */
   function qsa(query) {
     return document.querySelectorAll(query);
   }
 
+  /**
+   * Shorthand for createElement; additionally allows addition of attributes
+   * in line with element generation.
+   * @param {String} tag - type of element to generate
+   * @param {Object} attributes - attributes to attach to the element
+   * @returns {HTMLElement}
+   */
   function gen(tag, attributes = {}) {
     const element = document.createElement(tag);
     for (const [key, value] of Object.entries(attributes)) {
