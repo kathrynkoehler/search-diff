@@ -32,12 +32,21 @@ button {
   margin-top: 8px;
 }
 
+h1 {
+  font-size: 18pt;
+}
+
 #searchbar {
   width: 30%;
+  max-width: 450px;
   height: 100%;
-  padding: 0.5rem;
+  padding: 0.75rem;
   box-sizing: border-box;
   background-color: white;
+}
+
+#searchbar > article > p {
+  font-size: 14pt;
 }
 
 #searchbar div {
@@ -80,7 +89,6 @@ button {
   width: 100%;
   max-height: fit-content;
   margin-bottom: 3rem;
-  /* background-color: aqua; */
   transition: max-height linear 0.3s;
 }
 
@@ -118,7 +126,6 @@ button {
   width: 250px;
   height: 400px;
   flex-wrap: wrap;
-  /* border: 1px solid red; */
   margin: 0.5em;
   background-color: white;
 }
@@ -131,7 +138,7 @@ button {
 
 .card .cardContents {
   background: white;
-  padding: 0.2rem;
+  padding: 0.3rem;
 }
 
 .card img {

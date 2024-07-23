@@ -10,6 +10,16 @@
   <body>
     <main>
       <section id="searchbar">
+        <article>
+          <h1>Search Diff Tool</h1>
+          <p>
+            Compare results across lululemon.com's search and browse pages. The
+            first URL's items are compared to each subsequent one to find
+            the products they have in common and those they differ on.
+          </p>
+          <p>Click a URL search heading to collapse the listed items.</p>
+        </article>
+        <br>
         <input placeholder="paste URL here" name="page-0">
         <hr>
         <div id="urls">
@@ -20,12 +30,12 @@
         <button id="add-url-btn">Add URL</button>
         <!-- additional search terms can be added here -->
         <button id="run-diff-btn">Run Diff</button>
-        <svg class="hidden" viewBox="0 0 40 40">
-          <circle id="load-circle" cx="20" cy="20" r="15"></circle>
-        </svg>
+        <article id="error" class="hidden">
+          <p></p>
+        </article>
       </section>
       <section id="items">
-        <!-- list missing items here, and label which side they're absent from -->
+        <!-- list missing items here, and label which url they're absent from -->
       </section>
     </main>
   </body>
