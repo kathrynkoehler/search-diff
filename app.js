@@ -32,7 +32,7 @@ app.post('/search/', async (req, res) => {
     });
 
     // go to the page, and wait until it's done loading in content
-    await page.goto(query, {waitUntil: 'networkidle2'});
+    await page.goto(query, {waitUntil: 'networkidle0'});
 
     console.log('got page');
     await page.waitForSelector('pre');

@@ -140,9 +140,9 @@
       // account for the product.id object sometimes being absent
       let prodId = item['product.id'];
       if (!prodId) {
-        prodId = item['product.repositoryId'][0];
+        prodId = item['product.repositoryId'][0].trim();
       } else {
-        prodId = item['product.id'][0];
+        prodId = item['product.id'][0].trim();
       }
 
       products.push({ page, prodId, name, img, url });
