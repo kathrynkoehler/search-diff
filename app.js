@@ -19,12 +19,10 @@ app.use(multer().none());
 app.post('/search/', async (req, res) => {
   try {
     let query = req.body.query;
-    console.log(query);
     let browser = await puppeteer.launch(); //{headless: false}
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(2 * 60 * 1000);
 
-    console.log('!!! starting scrape !!!');
 
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36');
     await page.setExtraHTTPHeaders({
@@ -34,7 +32,6 @@ app.post('/search/', async (req, res) => {
     // go to the page, and wait until it's done loading in content
     await page.goto(query, {waitUntil: 'networkidle0'});
 
-    console.log('got page');
     await page.waitForSelector('pre');
     let data = await page.evaluate(async () => {
       let element = document.querySelector('pre');

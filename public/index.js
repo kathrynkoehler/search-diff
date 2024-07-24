@@ -69,9 +69,7 @@
         let parsed = parseResponse(results[i], i);
         response.push(parsed);
       }
-      // console.log(response);
       let comparison = compareResults(response);
-      // console.log(comparison);
       addResultsToPage(comparison);
       let loading = qsa('.loading');
       loading.forEach(section => {section.classList.remove('loading')});
@@ -101,7 +99,6 @@
    */
   async function fetchSearchResults(query) {
     try {
-      console.log('fetch: ' + query);
       let search = new FormData();
       if (query.includes('search')) {
         search.append('query', `${query}&No=0&Nrpp=1000&format=json`);
@@ -135,7 +132,7 @@
       
       const name = item['product.displayName'][0];
       const img = item['product.sku.skuImages'][0];
-      const url = item['product.pdpURL'][0];
+      const url = "shop.lululemon.com" + item['product.pdpURL'][0];
 
       // account for the product.id object sometimes being absent
       let prodId = item['product.id'];
@@ -253,6 +250,7 @@
         prefix = 'Search: ';
         terms = urls[i].split('search?Ntt=')[1];
         terms = terms.split('%20').join(' ');
+        terms = terms.split('%27').join("'");
       } else {
         prefix = 'Browse: ';
         terms = urls[i].split('c/')[1].split('/')[0];
@@ -281,7 +279,7 @@
   function buildItem(item) {
     let card = gen('article', {classList: 'card'});
     let name = gen('h2', {textContent: item.name});
-    let idLink = gen('a', {href: item.url});
+    let idLink = gen('a', {href: item.url, target: "_blank"});
     let id = gen('p', {textContent: item.prodId});
     idLink.append(id);
     let contentDiv = gen('div', {classList: 'cardContents'});
