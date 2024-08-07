@@ -108,6 +108,7 @@
       let res = await fetch(`/search`, { method: "POST", body: search});
       await statusCheck(res);
       res = await res.json();
+      console.log(res);
       return res;
     } catch (err) {
       console.error('fetchSearchResults: ', err);
@@ -337,7 +338,7 @@
   }
 
   /**
-   * Shorthand for querySelector
+   * Shorthand for querySelectorAll
    * @param {String} query - the selector to query for
    * @returns {HTMLElement}
    */

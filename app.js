@@ -19,10 +19,18 @@ app.use(multer().none());
 app.post('/search/', async (req, res) => {
   try {
     let query = req.body.query;
+    let data = await requestPage(query);
+    res.send(data);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+async function requestPage(query) {
+  try {
     let browser = await puppeteer.launch(); //{headless: false}
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(2 * 60 * 1000);
-
 
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36');
     await page.setExtraHTTPHeaders({
@@ -38,12 +46,41 @@ app.post('/search/', async (req, res) => {
       return element ? element.innerHTML : null;
     });
     await browser.close();
-    res.send(data);
+    let redirect = await redirectPage(data);
+    if (redirect) {
+      await requestPage(redirect);
+    } else {
+      return data;
+    }
   } catch (err) {
     console.error(`Error fetching: `, err);
-    res.type('text').status(500).send(`error in /search: ${err}`);
+    // res.type('text').status(500).send(`error in /search: ${err}`);
   }
-});
+}
+
+/**
+ * Sometimes searches are redirected to browse pages. This function grabs the new
+ * URL from the redirect JSON to try again with the new page.
+ */
+async function redirectPage(contents) {
+  try {
+    contents = await JSON.parse(contents);
+    // console.log(Object.keys(contents));
+    // console.log(contents["endeca:redirect"]);
+    let page = contents["endeca:redirect"]["link"]["url"];
+    if (page) {
+      page = page.slice(1);
+      page = page.split("?")[0];
+      page = `https://shop.lululemon.com${page}?No=0&Nrpp=1000&format=json`;
+      console.log(page);
+      return page;
+    } else {
+      return false;
+    }
+  } catch (err) {
+    return false;
+  }
+}
 
 // tells app to listen to path '/public'
 app.use(express.static('public'));
