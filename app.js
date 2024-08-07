@@ -41,7 +41,7 @@ app.post('/search/', async (req, res) => {
     res.send(data);
   } catch (err) {
     console.error(`Error fetching: `, err);
-    res.type('text').status(500).send(`error in /search: ${err}`);
+    res.type('text').status(500).send(`Error fetching page: ${err}`);
   }
 });
 

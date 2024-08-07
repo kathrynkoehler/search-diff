@@ -337,7 +337,7 @@
   }
 
   /**
-   * Shorthand for querySelector
+   * Shorthand for querySelectorAll
    * @param {String} query - the selector to query for
    * @returns {HTMLElement}
    */
