@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <title>Search Diff</title>
-    <link rel="icon" type="image/png" href="./lulufavicon.png">
+    <link rel="icon" type="image/png" href="lulufavicon.png">
     <link rel="stylesheet" href="index.css">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <script src="index.js"></script>
@@ -19,7 +19,9 @@
           </p>
           <p>Click a URL search heading to collapse the listed items.</p>
         </article>
-        <br>
+        <section id="error" class="hidden">
+          <p></p>
+        </section>
         <input placeholder="paste URL here" name="page-0">
         <hr>
         <div id="urls">
@@ -28,7 +30,6 @@
           </div>
         </div>
         <button id="add-url-btn">Add URL</button>
-        <!-- additional search terms can be added here -->
         <button id="run-diff-btn">Run Diff</button>
         <article id="error" class="hidden">
           <p></p>

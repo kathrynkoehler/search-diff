@@ -67,6 +67,12 @@ h1 {
   margin-bottom: 5px;
 }
 
+#error {
+  border: 3px #c8102e solid;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
 /* --------------- items ---------------- */
 
 #items {
@@ -178,6 +184,7 @@ h1 {
   background-color: rgba(255, 255, 255, 0.8);
 }
 
+
 #load-circle {
   width: 250px;
   height: 100px;
@@ -225,6 +232,7 @@ h1 {
     background-position: 1150px 0;
   }
 }
+
 
 .hidden {
   display: none;

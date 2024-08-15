@@ -23,7 +23,6 @@ app.post('/search/', async (req, res) => {
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(2 * 60 * 1000);
 
-
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36');
     await page.setExtraHTTPHeaders({
       'Accept-Language': 'en-US,en;q=0.9',
@@ -40,7 +39,6 @@ app.post('/search/', async (req, res) => {
     await browser.close();
     res.send(data);
   } catch (err) {
-    console.error(`Error fetching: `, err);
     res.type('text').status(500).send(`Error fetching page: ${err}`);
   }
 });

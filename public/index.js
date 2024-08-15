@@ -51,6 +51,7 @@
   async function queryData() {
     try {
       // clear prior contents
+      id('error').classList.add('hidden');
       id('items').innerHTML = '';
       let headings = qsa('#searchbar h4');
       for (let i = 0; i < headings.length; i++) {
@@ -75,6 +76,7 @@
       loading.forEach(section => {section.classList.remove('loading')});
     } catch (err) {
       console.error(err);
+      handleError(false, null, null);
     }
   }
 
@@ -124,27 +126,46 @@
    *          products on the page.
    */
   function parseResponse(data, page) {
-    // the object within the response that holds the list of items on the page
-    const doc = data['contents'][0]['mainContent'][0]['contents'][0]['records'];
-    const products = [];
-    doc.forEach(record => {
-      let item = record['attributes'];
-      
-      const name = item['product.displayName'][0];
-      const img = item['product.sku.skuImages'][0];
-      const url = "shop.lululemon.com" + item['product.pdpURL'][0];
+    // check that the URL didn't redirect
+    if (data['endeca:redirect']) {
+      const redirectUrl = data['endeca:redirect']['link']['url'];
+      handleError(true, redirectUrl, page);
+      return [];
+    } else {
+      // the object within the response that holds the list of items on the page
+      const doc = data['contents'][0]['mainContent'][0]['contents'][0]['records'];
+      const products = [];
+      doc.forEach(record => {
+        let item = record['attributes'];
+        
+        const name = item['product.displayName'][0];
+        const img = item['product.sku.skuImages'][0];
+        const url = "shop.lululemon.com" + item['product.pdpURL'][0];
+  
+        // account for the product.id object sometimes being absent
+        let prodId = item['product.id'];
+        if (!prodId) {
+          prodId = item['product.repositoryId'][0].trim();
+        } else {
+          prodId = item['product.id'][0].trim();
+        }
+  
+        products.push({ page, prodId, name, img, url });
+      });
+      return products;
+    }
+  }
 
-      // account for the product.id object sometimes being absent
-      let prodId = item['product.id'];
-      if (!prodId) {
-        prodId = item['product.repositoryId'][0].trim();
-      } else {
-        prodId = item['product.id'][0].trim();
-      }
+  function handleError(isRedirect, url, page) {
+    const error = id('error');
 
-      products.push({ page, prodId, name, img, url });
-    });
-    return products;
+    if (isRedirect) {
+      let message = error.querySelector('p');
+      message.textContent = `Page ${page} redirects to the following \
+      address: "${url}". Please try again with the redirected URL.`;
+    }
+
+    error.classList.remove('hidden');
   }
 
   /**
@@ -198,16 +219,18 @@
     let items = id('items');
 
     // build the section to hold common items
+    let common;
     let commonCardHolder = gen('section');
-    if (results.commonItems[0].length === 0) {
+    if (!results.commonItems[0] || results.commonItems[0].length === 0) {
       let p = gen('p', {textContent: 'No common items.'})
       commonCardHolder.append(p);
+      common = gen('h3', {textContent: `Common Items (0)`});
     } else {
       for (let i = 0; i < results.commonItems[0].length; i ++) {
         commonCardHolder.append(buildItem(results.commonItems[0][i]));
       }
+      common = gen('h3', {textContent: `Common Items (${results.commonItems[0].length})`});
     }
-    let common = gen('h3', {textContent: `Common Items (${results.commonItems[0].length})`});
     common.addEventListener('click', (e) => {
       collapseCards(e);
     });
